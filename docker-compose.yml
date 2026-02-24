@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # --- Edge Layer ---
+  collector:
+    image: plc-collector:latest
+    build:
+      context: ./services/collector
+    env_file: .env.production
+    volumes:
+      - ./config/config.yaml:/app/config.yaml
+      - oes_data:/data/oes
+    depends_on:
+      - postgres
+      - kafka
+      - influxdb
+
+  # --- Data Layer ---
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: plc_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: plc_monitor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  influxdb:
+    image: influxdb:2.7-alpine
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: fab-org
+      DOCKER_INFLUXDB_INIT_BUCKET: process_data
+    volumes:
+      - influx_data:/var/lib/influxdb2
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  redis:
+    image: redis:7-alpine
+
+  # --- Analytics Layer ---
+  analytics:
+    image: plc-analytics:latest
+    build:
+      context: ./services/analytics
+    env_file: .env.production
+    depends_on:
+      - kafka
+      - postgres
+
+  # --- Frontend Layer ---
+  frontend:
+    image: plc-frontend:latest
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    env_file: .env.production
+    depends_on:
+      - collector
+      - analytics
+
+  # --- Monitoring & Observability ---
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  influx_data:
+  oes_data:

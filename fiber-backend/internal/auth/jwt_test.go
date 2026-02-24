@@ -9,53 +9,44 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// Set test-only JWT secret
 	os.Setenv("JWT_SECRET", "test-secret-key-for-unit-tests")
 	os.Setenv("JWT_ACCESS_EXP_MIN", "5")
 	os.Exit(m.Run())
 }
 
-func TestGenerate_ReturnsToken(t *testing.T) {
-	token, err := Generate(1, "test@test.com", "user")
-	if err != nil {
-		t.Fatalf("Generate returned error: %v", err)
-	}
-	if token == "" {
-		t.Fatal("Generate returned empty token")
-	}
-}
+func TestGenerateAndParse(t *testing.T) {
+	userID := "550e8400-e29b-41d4-a716-446655440000"
+	username := "testuser"
+	roles := []string{"admin"}
+	perms := map[string][]string{"machine": {"read"}}
 
-func TestParseToken_ExtractsClaims(t *testing.T) {
-	token, err := Generate(42, "alice@example.com", "admin")
+	token, _, err := GenerateAccessToken(userID, username, roles, perms)
 	if err != nil {
-		t.Fatalf("Generate: %v", err)
+		t.Fatalf("failed to generate: %v", err)
 	}
 
 	claims, err := ParseToken(token)
 	if err != nil {
-		t.Fatalf("ParseToken: %v", err)
+		t.Fatalf("failed to parse: %v", err)
 	}
 
-	if claims.UserID != 42 {
-		t.Errorf("expected UserID 42, got %d", claims.UserID)
+	if claims.UserID != userID {
+		t.Errorf("expected userID %s, got %s", userID, claims.UserID)
 	}
-	if claims.Email != "alice@example.com" {
-		t.Errorf("expected email alice@example.com, got %s", claims.Email)
+	if claims.Username != username {
+		t.Errorf("expected username %s, got %s", username, claims.Username)
 	}
-	if claims.Role != "admin" {
-		t.Errorf("expected role admin, got %s", claims.Role)
+	if len(claims.Roles) != len(roles) || claims.Roles[0] != roles[0] {
+		t.Errorf("expected roles %v, got %v", roles, claims.Roles)
 	}
 }
 
 func TestParseToken_RejectsExpiredToken(t *testing.T) {
-	// Create a token that expired 1 hour ago
 	claims := Claims{
-		UserID: 1,
-		Email:  "expired@test.com",
-		Role:   "user",
+		UserID:   "expired-user",
+		Username: "expired",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(-1 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now().Add(-2 * time.Hour)),
 		},
 	}
 
@@ -69,14 +60,9 @@ func TestParseToken_RejectsExpiredToken(t *testing.T) {
 }
 
 func TestParseToken_RejectsInvalidSignature(t *testing.T) {
-	// Sign with a different secret
 	claims := Claims{
-		UserID: 1,
-		Email:  "bad@test.com",
-		Role:   "user",
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-		},
+		UserID:   "bad-sig-user",
+		Username: "badsig",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

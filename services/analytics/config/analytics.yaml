@@ -1,0 +1,24 @@
+spc:
+  check_interval_minutes: 5
+  subgroup_size: 5
+  control_limits_sigma: 3
+
+golden_fingerprint:
+  training_days: 30
+  method: ensemble
+  model_path: /app/models/
+  drift_threshold: 0.3
+
+endpoint:
+  kafka_topic: plc-data
+  kafka_brokers: ["kafka:9092"]
+  buffer_size: 1000
+
+storage:
+  influxdb:
+    url: http://influxdb:8086
+    token: ${INFLUX_TOKEN}
+    org: plc-org
+    bucket: plc-data
+  postgres:
+    conn_str: ${DB_URL}

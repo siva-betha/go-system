@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS symbols;
+DROP TABLE IF EXISTS chambers;
+DROP TABLE IF EXISTS machines;

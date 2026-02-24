@@ -12,14 +12,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Claims holds the custom JWT payload stored in each access token.
-type Claims struct {
-	UserID int64  `json:"sub"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	jwt.RegisteredClaims
-}
-
 // TokenPair holds the access and refresh tokens returned to the client.
 type TokenPair struct {
 	AccessToken  string `json:"access_token"`
@@ -28,7 +20,7 @@ type TokenPair struct {
 }
 
 // GenerateAccessToken creates a short-lived JWT (default 15 min).
-func GenerateAccessToken(userID int64, email, role string) (string, int, error) {
+func GenerateAccessToken(userID string, username string, roles []string, permissions map[string][]string) (string, int, error) {
 	expMin := 15 // default 15 minutes for access token
 	if v := os.Getenv("JWT_ACCESS_EXP_MIN"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
@@ -37,12 +29,14 @@ func GenerateAccessToken(userID int64, email, role string) (string, int, error) 
 	}
 
 	claims := Claims{
-		UserID: userID,
-		Email:  email,
-		Role:   role,
+		UserID:      userID,
+		Username:    username,
+		Roles:       roles,
+		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expMin) * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "plc-monitor",
 		},
 	}
 
@@ -84,7 +78,7 @@ func HashToken(token string) string {
 	return hex.EncodeToString(h[:])
 }
 
-// ParseToken validates a JWT string and returns the claims.
+// ParseToken validates a JWT string and returns the claims using the environment secret.
 func ParseToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -104,11 +98,22 @@ func ParseToken(tokenStr string) (*Claims, error) {
 	return claims, nil
 }
 
-// ---------- Backward compatibility ----------
+// ParseToken validates a JWT string and returns the claims.
+func (m *AuthMiddleware) ParseToken(tokenStr string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+		}
+		return m.jwtSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
 
-// Generate creates a signed JWT (kept for seeding / simple use).
-// Prefer GenerateAccessToken for auth flows.
-func Generate(userID int64, email, role string) (string, error) {
-	token, _, err := GenerateAccessToken(userID, email, role)
-	return token, err
+	claims, ok := token.Claims.(*Claims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	return claims, nil
 }

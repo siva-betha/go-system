@@ -1,0 +1,13 @@
+endpoint_model_path: /app/models/endpoint_model.joblib
+oes_data_path: /app/data
+
+storage:
+  influxdb_url: http://influxdb:8086
+  influxdb_token: ${INFLUX_TOKEN}
+  influxdb_org: plc-org
+  influxdb_bucket: oes-data
+  oes_data_path: /app/data
+
+kafka:
+  topic: oes-raw-data
+  brokers: ["kafka:9092"]

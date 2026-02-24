@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS machines (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    ip TEXT NOT NULL,
+    ams_net_id TEXT NOT NULL,
+    port INTEGER NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS chambers (
+    id TEXT PRIMARY KEY,
+    machine_id TEXT NOT NULL REFERENCES machines(id) ON DELETE CASCADE,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS symbols (
+    id TEXT PRIMARY KEY,
+    chamber_id TEXT NOT NULL REFERENCES chambers(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    data_type TEXT NOT NULL,
+    unit TEXT
+);

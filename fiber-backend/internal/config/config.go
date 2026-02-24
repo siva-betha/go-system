@@ -17,13 +17,16 @@ func Load() Config {
 		log.Println("No .env file found, relying on system environment variables")
 	}
 
-	db := "postgres://" +
-		os.Getenv("DB_USER") + ":" +
-		os.Getenv("DB_PASS") + "@" +
-		os.Getenv("DB_HOST") + ":" +
-		os.Getenv("DB_PORT") + "/" +
-		os.Getenv("DB_NAME") +
-		"?sslmode=" + os.Getenv("DB_SSL")
+	db := os.Getenv("DB_URL")
+	if db == "" {
+		db = "postgres://" +
+			os.Getenv("POSTGRES_USER") + ":" +
+			os.Getenv("POSTGRES_PASSWORD") + "@" +
+			os.Getenv("POSTGRES_HOST") + ":" +
+			os.Getenv("POSTGRES_PORT") + "/" +
+			os.Getenv("POSTGRES_DB") +
+			"?sslmode=disable"
+	}
 
 	return Config{
 		AppPort: os.Getenv("APP_PORT"),

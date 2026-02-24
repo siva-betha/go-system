@@ -1,0 +1,49 @@
+# config/config.yaml - Production Standards
+
+system:
+  version: "1.0.0"
+  location: "Fab-7"
+  
+plc:
+  scan_rate_ms: 10
+  timeout_ms: 5000
+  reconnect_interval_s: 1
+  
+  field_mappings:
+    enabled: true
+    mappings:
+      - { source: "Recipe.Status", target: "MAIN_1.recipeexecute.Status" }
+      - { source: "Recipe.recipe_exe.recipeexecute.Done", target: "MAIN_1.recipe_done" }
+  
+  recipe_identifiers:
+    - "Recipe.recipe_exe.Process_Job"
+    - "Recipe.recipe_exe.Substrate_ID"
+
+analytics:
+  spc:
+    control_limits_sigma: 3
+    nelson_rules: true
+  
+  endpoint:
+    default_algo: "ratio"
+    confidence_min: 0.85
+    
+  fingerprint:
+    drift_threshold: 0.2
+    auto_recalibrate: true
+
+alerting:
+  channels:
+    email: { enabled: true, to: ["engineer@fab.com"] }
+    slack: { enabled: false, webhook: "" }
+  
+  thresholds:
+    disk_usage_pct: 85
+    kafka_lag_max: 10000
+
+storage:
+  oes:
+    compression: "zstd"
+    max_file_size_mb: 500
+    retention_days: 30
+    root_path: "/data/oes"

@@ -2,14 +2,15 @@ package user
 
 import (
 	"fiber-backend/internal/middleware"
+	"fiber-backend/internal/modules/audit"
 
 	"github.com/gofiber/fiber/v3"
 )
 
 // AuthRoutes registers the public auth endpoints (register, login, refresh, logout)
 // and the protected profile endpoint.
-func AuthRoutes(r fiber.Router, repo Repository, tokenRepo TokenRepository) {
-	h := Handler{Repo: repo, TokenRepo: tokenRepo}
+func AuthRoutes(r fiber.Router, repo Repository, tokenRepo TokenRepository, auditSvc *audit.Service) {
+	h := Handler{Repo: repo, TokenRepo: tokenRepo, AuditService: auditSvc}
 
 	r.Post("/register", h.Register)
 	r.Post("/login", h.Login)
@@ -22,8 +23,8 @@ func AuthRoutes(r fiber.Router, repo Repository, tokenRepo TokenRepository) {
 
 // Routes registers admin-level user CRUD endpoints.
 // These should be mounted behind JWT middleware by the caller.
-func Routes(r fiber.Router, repo Repository, tokenRepo TokenRepository) {
-	h := Handler{Repo: repo, TokenRepo: tokenRepo}
+func Routes(r fiber.Router, repo Repository, tokenRepo TokenRepository, auditSvc *audit.Service) {
+	h := Handler{Repo: repo, TokenRepo: tokenRepo, AuditService: auditSvc}
 
 	r.Post("/", h.Create)
 	r.Get("/", h.List)

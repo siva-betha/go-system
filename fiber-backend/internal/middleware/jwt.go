@@ -9,7 +9,6 @@ import (
 )
 
 // JWT validates the Authorization header and stores parsed claims in Locals.
-// Downstream handlers can access: c.Locals("userID"), c.Locals("email"), c.Locals("role").
 func JWT() fiber.Handler {
 	return func(c fiber.Ctx) error {
 		h := c.Get("Authorization")
@@ -28,9 +27,11 @@ func JWT() fiber.Handler {
 		}
 
 		// Store claims in context for downstream handlers
-		c.Locals("userID", claims.UserID)
-		c.Locals("email", claims.Email)
-		c.Locals("role", claims.Role)
+		c.Locals("user", claims)
+		c.Locals("user_id", claims.UserID)
+		c.Locals("username", claims.Username)
+		c.Locals("roles", claims.Roles)
+		c.Locals("permissions", claims.Permissions)
 
 		return c.Next()
 	}

@@ -258,6 +258,86 @@
                 }
             }
         },
+        "/config/machines": {
+            "get": {
+                "description": "Returns a list of all PLC machines with their chambers and symbols",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "Get all configured PLC machines",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/machine_config.Machine"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Overwrites the current machine configurations with the provided list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "Save PLC machine configurations",
+                "parameters": [
+                    {
+                        "description": "List of machines to configure",
+                        "name": "machines",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/machine_config.Machine"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/influx/health": {
             "get": {
                 "security": [
@@ -608,6 +688,91 @@
                 },
                 "value": {},
                 "wafer_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "machine_config.Chamber": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "machine_id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "symbols": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/machine_config.Symbol"
+                    }
+                }
+            }
+        },
+        "machine_config.Machine": {
+            "type": "object",
+            "required": [
+                "ams_net_id",
+                "ip",
+                "name",
+                "port"
+            ],
+            "properties": {
+                "ams_net_id": {
+                    "type": "string"
+                },
+                "chambers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/machine_config.Chamber"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "machine_config.Symbol": {
+            "type": "object",
+            "required": [
+                "data_type",
+                "name"
+            ],
+            "properties": {
+                "chamber_id": {
+                    "type": "string"
+                },
+                "data_type": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unit": {
                     "type": "string"
                 }
             }

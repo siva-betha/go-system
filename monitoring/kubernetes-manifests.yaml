@@ -1,0 +1,53 @@
+# kubernetes-manifests.yaml - Production Deployment Standard
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plc-collector
+  namespace: etch-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: plc-collector
+  template:
+    metadata:
+      labels:
+        app: plc-collector
+    spec:
+      containers:
+      - name: collector
+        image: gcr.io/fab-org/plc-collector:1.0.0
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - configMapRef: { name: plc-config }
+        - secretRef: { name: plc-secrets }
+        volumeMounts:
+        - name: oes-storage
+          mountPath: /data/oes
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plc-collector-svc
+  namespace: etch-monitor
+spec:
+  selector:
+    app: plc-collector
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: oes-storage-pvc
+  namespace: etch-monitor
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Ti

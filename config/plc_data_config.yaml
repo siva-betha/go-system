@@ -1,0 +1,65 @@
+data_collection:
+  scan_rate_ms: 10
+  
+  arrays:
+    - name: "MAIN_OES.FlatArray"
+      size: 2048
+      data_type: "UINT"
+      compression: true
+      storage: "influxdb_array"
+      metadata_fields:
+        - "MAIN_OES.Expose_Time_Execute"
+        - "MAIN_OES.Expose_TIME"
+        - "MAIN_OES.Number_To_Average_Execute"
+        - "MAIN_OES.Number_TO_Average"
+        - "MAIN_OES.Pixel_size"
+        - "MAIN_OES.X_Pixel_Bin"
+        - "MAIN_OES.Acquisition_counter"
+        - "MAIN_OES.Segment_counter"
+        - "MAIN_OES.Total_Segments"
+        - "MAIN_OES.FullFrameReady"
+        - "MAIN_OES.regDone"
+        - "MAIN_OES.updThisScan"
+  
+  scalar_fields:
+    - name: "MAIN_OES.Continuos_Aquis"
+      data_type: "BOOL"
+      store_in: "both"
+    - name: "MAIN_OES.Expose_Time_Execute"
+      data_type: "BOOL"
+    - name: "MAIN_OES.Final_Segment"
+      data_type: "BOOL"
+    
+  recipe_fields:
+    - name: "Recipe.recipe_exe.Process_Job"
+      data_type: "STRING"
+      is_identifier: true
+    - name: "Recipe.recipe_exe.Substrate_ID"
+      data_type: "STRING"
+      is_identifier: true
+    - name: "Recipe.recipe_exe.EP_Algorithm"
+      data_type: "STRING"
+    - name: "Recipe.recipe_exe.EP_DETECTION"
+      data_type: "INT"
+    - name: "Recipe.fSine"
+      data_type: "REAL"
+    - name: "Recipe.Status"
+      data_type: "STRING"
+    - name: "Recipe.recipe_start_time"
+      data_type: "STRING"
+    - name: "Recipe.recipe_end_time"
+      data_type: "STRING"
+  
+  field_mappings:
+    enabled: true
+    mappings:
+      - source: "Recipe.Status"
+        target: "MAIN_1.recipeexecute.Status"
+      - source: "Recipe.recipe_exe.recipeexecute.Done"
+        target: "MAIN_1.recipe_done"
+      - source: "Recipe.recipe_exe.filename"
+        target: "MAIN_1.filename"
+      - source: "Recipe.recipe_start_time"
+        target: "MAIN_1.recipe_start_time"
+      - source: "Recipe.recipe_end_time"
+        target: "MAIN_1.recipe_end_time"
