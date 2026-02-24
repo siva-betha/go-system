@@ -1,0 +1,92 @@
+# Go PLC Read/Write Engine — TwinCAT ADS Architecture
+
+---
+
+# Protocol
+
+TwinCAT uses ADS (Automation Device Specification).
+
+You will use:
+Go ADS client library (community) or CGO wrapper.
+
+---
+
+# Engine Components
+
+PLC Connector Service
+ADS Client Pool
+Variable Registry
+Read Scheduler
+Write Guard
+Safety Validator
+Audit Logger
+
+---
+
+# Read Flow
+
+scheduler → ADS read → decode → validate → publish → store
+
+Supports:
+
+* polling mode
+* subscription mode
+* burst read batching
+
+---
+
+# Write Flow (Safety Critical)
+
+request → permission check → variable allowlist → type check → range check → ADS write → verify readback → audit log
+
+---
+
+# Required Safety Controls
+
+* write allowlist only
+* type-safe writes
+* min/max guardrails
+* dry-run mode
+* dual approval mode (optional)
+* write rate limits
+
+---
+
+# Variable Registry Table
+
+variable name
+PLC path
+data type
+unit
+min
+max
+write_allowed bool
+
+---
+
+# Failure Handling
+
+timeout retry
+connection pool reset
+PLC offline detection
+write rollback flag
+
+---
+
+# Deployment Rule
+
+PLC connector must run isolated from public API.
+Only internal queue messages can trigger writes.
+
+---
+
+# Next Step
+
+If you want, next I can generate:
+
+* Go ADS client library options
+* full PLC engine code
+* safe write wrapper
+* variable registry schema
+* PLC gateway microservice design
+* OT/IT network security model
